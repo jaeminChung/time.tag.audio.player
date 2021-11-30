@@ -2,6 +2,7 @@
     package="com.example.time_tag_audio_player">
    <application
         android:label="time_tag_audio_player"
+        android:requestLegacyExternalStorage="true"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
@@ -37,5 +38,8 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-    </application>
+   </application>
+
+   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 </manifest>
