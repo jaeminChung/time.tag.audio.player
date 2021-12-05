@@ -77,39 +77,9 @@ class _DemoPageState extends State<DemoPage> {
     setState(() {});
   }
 
-  Future<void> _openFile(BuildContext context) async {
-    String? path = await FilesystemPicker.open(
-      title: 'Open file',
-      context: context,
-      rootDirectory: rootPath!,
-      fsType: FilesystemType.file,
-      folderIconColor: Colors.teal,
-//      allowedExtensions: [''],
-      fileTileSelectMode: filePickerSelectMode,
-      requestPermission: () async =>
-      await Permission.storage.request().isGranted,
-    );
-
-    if (path != null) {
-      File file = File('$path');
-      String contents = await file.readAsString();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(contents),
-        ),
-      );
-    }
-
-    setState(() {
-      filePath = path;
-    });
-  }
-
   Future<void> _pickDir(BuildContext context) async {
     rootPath = await getExternalStorageDirectory();
     rootPath = rootPath?.parent;
-    print(rootPath);
     rootPath = Directory("/sdcard");
 
     final status = await Permission.storage.request();
@@ -121,7 +91,7 @@ class _DemoPageState extends State<DemoPage> {
       pickText: 'Save file to this folder',
       folderIconColor: Colors.teal,
       requestPermission: () async =>
-      await Permission.storage.request().isGranted,
+          await Permission.storage.request().isGranted,
     );
 
     setState(() {
@@ -153,35 +123,16 @@ class _DemoPageState extends State<DemoPage> {
                             : Brightness.light);
                   },
                 ),
-
-                Divider(height: 60),
-
-                // Directory picker section
-
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20),
-                  child: Text(
-                    'Directory Picker',
-                    style: Theme.of(context).textTheme.headline5,
-                  ),
-                ),
-
-                if (dirPath != null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Text('$dirPath'),
-                  ),
-
-                ElevatedButton(
-                  child: Text('Save File'),
-                  onPressed:
-                  (rootPath != null) ? () => _pickDir(context) : null,
-                ),
               ],
             ),
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: (rootPath != null) ? () => _pickDir(context) : null,
+        tooltip: 'Increment',
+        child: const Icon(Icons.add),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
