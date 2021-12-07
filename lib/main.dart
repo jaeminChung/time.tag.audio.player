@@ -31,7 +31,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'FileSystem Picker Demo',
+      title: 'Time tag audio player',
       theme: ThemeData(
         primarySwatch: Colors.teal,
         colorScheme: ColorScheme.fromSwatch(
@@ -39,24 +39,26 @@ class _MyAppState extends State<MyApp> {
           accentColor: Colors.white,
           brightness: _brightness,
         ),
-        buttonTheme: ButtonThemeData(
+        buttonTheme: const ButtonThemeData(
           buttonColor: Colors.teal,
           textTheme: ButtonTextTheme.accent,
         ),
         toggleableActiveColor: Colors.teal,
         brightness: _brightness,
       ),
-      home: DemoPage(),
+      home: const SelectFolderPage(),
     );
   }
 }
 
-class DemoPage extends StatefulWidget {
+class SelectFolderPage extends StatefulWidget {
+  const SelectFolderPage({Key? key}) : super(key: key);
+
   @override
-  _DemoPageState createState() => _DemoPageState();
+  _SelectFolderPageState createState() => _SelectFolderPageState();
 }
 
-class _DemoPageState extends State<DemoPage> {
+class _SelectFolderPageState extends State<SelectFolderPage> {
   Directory? rootPath;
 
   String? filePath;
@@ -64,31 +66,16 @@ class _DemoPageState extends State<DemoPage> {
 
   FileTileSelectMode filePickerSelectMode = FileTileSelectMode.checkButton;
 
-  @override
-  void initState() {
-    _prepareStorage();
-    super.initState();
-  }
-
-  Future<void> _prepareStorage() async {
-    rootPath = await getExternalStorageDirectory();
-    print(rootPath);
-
-    setState(() {});
-  }
-
   Future<void> _pickDir(BuildContext context) async {
-    rootPath = await getExternalStorageDirectory();
-    rootPath = rootPath?.parent;
     rootPath = Directory("/sdcard");
 
     final status = await Permission.storage.request();
     String? path = await FilesystemPicker.open(
-      title: 'Save to folder',
+      title: 'Select audio folder',
       context: context,
       rootDirectory: rootPath!,
       fsType: FilesystemType.folder,
-      pickText: 'Save file to this folder',
+      pickText: 'Select this folder',
       folderIconColor: Colors.teal,
       requestPermission: () async =>
           await Permission.storage.request().isGranted,
@@ -102,34 +89,31 @@ class _DemoPageState extends State<DemoPage> {
   @override
   Widget build(BuildContext context) {
     final appState = MyApp.of(context);
+    final List<String> entries = <String>['A', 'B', 'C'];
+    final List<int> colorCodes = <int>[600, 500, 100];
 
     return Scaffold(
       body: Builder(
         builder: (context) => Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                // Theme Brightness Switch Button
-                ElevatedButton(
-                  child: Text((appState!.brightness == Brightness.light)
-                      ? 'Switch to Dark theme'
-                      : 'Switch to Light theme'),
-                  onPressed: () {
-                    appState.setThemeBrightness(
-                        appState.brightness == Brightness.light
-                            ? Brightness.dark
-                            : Brightness.light);
-                  },
-                ),
-              ],
+            child: ListView.separated(
+              padding: const EdgeInsets.all(8),
+              itemCount: entries.length,
+              itemBuilder: (BuildContext context, int index) {
+                return Container(
+                  height: 50,
+                  color: Colors.amber[colorCodes[index]],
+                  child: Center(child: Text('Entry ${entries[index]}')),
+                );
+              },
+              separatorBuilder: (BuildContext context, int index) => const Divider(),
             ),
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: (rootPath != null) ? () => _pickDir(context) : null,
+        onPressed: () => _pickDir(context),
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
