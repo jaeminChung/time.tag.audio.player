@@ -90,7 +90,7 @@ class _SelectFolderPageState extends State<SelectFolderPage> {
     );
 
     setState(() {
-      if(path != null) {
+      if (path != null) {
         _audioFolders.add(FolderItem(folder: path));
       }
 
@@ -106,17 +106,15 @@ class _SelectFolderPageState extends State<SelectFolderPage> {
         builder: (context) => Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: ListView.separated(
+            child: ListView.builder(
               padding: const EdgeInsets.all(8),
               itemCount: _audioFolders.length,
               itemBuilder: (BuildContext context, int index) {
                 return Container(
-                  height: 50,
-                  color: Colors.black12,
-                  child: Center(child: Text(_audioFolders.elementAt(index).folder)),
+                  child: Center(
+                      child: buildFolderCard(_audioFolders.elementAt(index))),
                 );
               },
-              separatorBuilder: (BuildContext context, int index) => const Divider(),
             ),
           ),
         ),
@@ -126,6 +124,42 @@ class _SelectFolderPageState extends State<SelectFolderPage> {
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+
+  Widget buildFolderCard(FolderItem item) {
+    return Card(
+      elevation: 2.0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: <Widget>[
+            const Icon(Icons.folder_open, size: 36),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                item.folder.replaceFirst('/sdcard/', ''),
+                style: const TextStyle(
+                  fontSize: 20.0,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Palatino',
+                ),
+              ),
+            ),
+            IconButton(
+                icon: const Icon(Icons.play_circle_outline),
+                iconSize: 30,
+                onPressed: () {
+                }),
+            IconButton(
+                icon: const Icon(Icons.delete_outline),
+                iconSize: 30,
+                onPressed: () {
+                }),
+          ],
+        ),
+      ),
     );
   }
 }
