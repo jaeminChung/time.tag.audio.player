@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:filesystem_picker/filesystem_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:time_tag_audio_player/folder_item.dart';
 
 void main() => runApp(const MyApp());
 
@@ -18,33 +20,17 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  Brightness _brightness = Brightness.light;
-
-  Brightness get brightness => _brightness;
-
-  void setThemeBrightness(Brightness brightness) {
-    setState(() {
-      _brightness = brightness;
-    });
-  }
+  final ThemeData theme = ThemeData();
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Time tag audio player',
-      theme: ThemeData(
-        primarySwatch: Colors.teal,
-        colorScheme: ColorScheme.fromSwatch(
-          primarySwatch: Colors.teal,
-          accentColor: Colors.white,
-          brightness: _brightness,
+      theme: theme.copyWith(
+        colorScheme: theme.colorScheme.copyWith(
+          primary: Colors.grey,
+          secondary: Colors.black,
         ),
-        buttonTheme: const ButtonThemeData(
-          buttonColor: Colors.teal,
-          textTheme: ButtonTextTheme.accent,
-        ),
-        toggleableActiveColor: Colors.teal,
-        brightness: _brightness,
       ),
       home: const SelectFolderPage(),
     );
@@ -59,52 +45,75 @@ class SelectFolderPage extends StatefulWidget {
 }
 
 class _SelectFolderPageState extends State<SelectFolderPage> {
-  Directory? rootPath;
-
-  String? filePath;
   String? dirPath;
 
-  FileTileSelectMode filePickerSelectMode = FileTileSelectMode.checkButton;
+  final Set<FolderItem> _audioFolders = {};
+
+  Future<void> _readJson() async {
+    final directory = await getExternalStorageDirectory();
+    final String path = directory?.path ?? "";
+
+    final file = File('$path/audio_folder.json');
+    final data = json.decode(await file.readAsString());
+
+    setState(() {
+      data.map((item) => _audioFolders.add(FolderItem.fromJson(item)));
+    });
+  }
+
+  Future<void> writeJson() async {
+    final directory = await getExternalStorageDirectory();
+    final String path = directory?.path ?? "";
+
+    final file = File('$path/audio_folder.json');
+    file.writeAsString(json.encode(_audioFolders.toList()));
+  }
+
+  @override
+  void initState() {
+    _readJson();
+    super.initState();
+  }
 
   Future<void> _pickDir(BuildContext context) async {
-    rootPath = Directory("/sdcard");
+    Directory? sdcardPath = Directory('/sdcard');
 
-    final status = await Permission.storage.request();
     String? path = await FilesystemPicker.open(
       title: 'Select audio folder',
       context: context,
-      rootDirectory: rootPath!,
+      rootDirectory: sdcardPath,
       fsType: FilesystemType.folder,
-      pickText: 'Select this folder',
-      folderIconColor: Colors.teal,
+//      pickText: 'Select this folder',
+      folderIconColor: Colors.grey,
       requestPermission: () async =>
           await Permission.storage.request().isGranted,
     );
 
     setState(() {
-      dirPath = path;
+      if(path != null) {
+        _audioFolders.add(FolderItem(folder: path));
+      }
+
+      writeJson();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final appState = MyApp.of(context);
-    final List<String> entries = <String>['A', 'B', 'C'];
-    final List<int> colorCodes = <int>[600, 500, 100];
-
     return Scaffold(
+      appBar: AppBar(title: const Text('Time tag audio player')),
       body: Builder(
         builder: (context) => Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: ListView.separated(
               padding: const EdgeInsets.all(8),
-              itemCount: entries.length,
+              itemCount: _audioFolders.length,
               itemBuilder: (BuildContext context, int index) {
                 return Container(
                   height: 50,
-                  color: Colors.amber[colorCodes[index]],
-                  child: Center(child: Text('Entry ${entries[index]}')),
+                  color: Colors.black12,
+                  child: Center(child: Text(_audioFolders.elementAt(index).folder)),
                 );
               },
               separatorBuilder: (BuildContext context, int index) => const Divider(),
