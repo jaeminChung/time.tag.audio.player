@@ -67,6 +67,40 @@ class _SelectFolderPageState extends State<SelectFolderPage> {
     });
   }
 
+  Future<void> _deleteFolder(FolderItem item) async {
+    setState(() {
+      _audioFolders.remove(item);
+      _writeJson();
+    });
+  }
+
+  Future<void> _asyncDeleteConfirmDialog(BuildContext context, FolderItem item) async {
+    return showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Confirm Delete'),
+          content: Text('Delete "${item.folder.replaceFirst('/sdcard/', '')}" folder?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Delete'),
+              onPressed: () {
+                _deleteFolder(item);
+                Navigator.of(context, rootNavigator: true).pop();
+              },
+            )
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -123,6 +157,7 @@ class _SelectFolderPageState extends State<SelectFolderPage> {
                 icon: const Icon(Icons.delete_outline),
                 iconSize: 30,
                 onPressed: () {
+                  _asyncDeleteConfirmDialog(context, item);
                 }),
           ],
         ),
