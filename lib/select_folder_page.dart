@@ -7,7 +7,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:time_tag_audio_player/folder_item.dart';
 
-
 class SelectFolderPage extends StatefulWidget {
   const SelectFolderPage({Key? key}) : super(key: key);
 
@@ -55,7 +54,7 @@ class _SelectFolderPageState extends State<SelectFolderPage> {
 //      pickText: 'Select this folder',
       folderIconColor: Colors.grey,
       requestPermission: () async =>
-      await Permission.storage.request().isGranted,
+          await Permission.storage.request().isGranted,
     );
 
     setState(() {
@@ -74,13 +73,15 @@ class _SelectFolderPageState extends State<SelectFolderPage> {
     });
   }
 
-  Future<void> _asyncDeleteConfirmDialog(BuildContext context, FolderItem item) async {
+  Future<void> _asyncDeleteConfirmDialog(
+      BuildContext context, FolderItem item) async {
     return showDialog<void>(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Confirm Delete'),
-          content: Text('Delete "${item.folder.replaceFirst('/sdcard/', '')}" folder?'),
+          content: Text(
+              'Delete "${item.folder.replaceFirst('/sdcard/', '')}" folder?'),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),
@@ -112,9 +113,9 @@ class _SelectFolderPageState extends State<SelectFolderPage> {
             child: ListView.builder(
               padding: const EdgeInsets.all(8),
               itemCount: _audioFolders.length,
-              itemBuilder: (BuildContext context, int index) {
+              itemBuilder: (context, index) {
                 return Center(
-                      child: buildFolderCard(_audioFolders.elementAt(index)));
+                    child: buildFolderCard(context, _audioFolders.elementAt(index)));
               },
             ),
           ),
@@ -128,7 +129,7 @@ class _SelectFolderPageState extends State<SelectFolderPage> {
     );
   }
 
-  Widget buildFolderCard(FolderItem item) {
+  Widget buildFolderCard(BuildContext context, FolderItem item) {
     return Card(
       elevation: 2.0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
@@ -139,20 +140,21 @@ class _SelectFolderPageState extends State<SelectFolderPage> {
             const Icon(Icons.folder_open, size: 36),
             const SizedBox(width: 8),
             Expanded(
+                child: TextButton(
+              style: TextButton.styleFrom(
+                textStyle: const TextStyle(fontSize: 20),
+              ),
+              onPressed: () {
+                Navigator.pushNamed(context, "/AudioList");
+              },
               child: Text(
                 item.folder.replaceFirst('/sdcard/', ''),
-                style: const TextStyle(
-                  fontSize: 20.0,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'Palatino',
-                ),
               ),
-            ),
+            )),
             IconButton(
                 icon: const Icon(Icons.play_circle_outline),
                 iconSize: 30,
-                onPressed: () {
-                }),
+                onPressed: () {}),
             IconButton(
                 icon: const Icon(Icons.delete_outline),
                 iconSize: 30,
