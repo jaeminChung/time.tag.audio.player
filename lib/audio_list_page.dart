@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
+import 'audio_player_page.dart';
 import 'folder_item.dart';
 
 class AudioListPage extends StatefulWidget {
@@ -17,7 +18,7 @@ class AudioListPage extends StatefulWidget {
 }
 
 class _AudioListPageState extends State<AudioListPage> {
-  List<FileSystemEntity> _audioFiles = [];
+  final List<FileSystemEntity> _audioFiles = [];
 
   @override
   void initState() {
@@ -53,22 +54,23 @@ class _AudioListPageState extends State<AudioListPage> {
         itemCount: _audioFiles.length,
         itemBuilder: (context, index) {
           return ListTile(
-            title: Row(
-              children: <Widget>[
-                const Icon(Icons.audiotrack, size: 36),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    basename(_audioFiles[index].path)
+              title: Row(
+                children: <Widget>[
+                  const Icon(Icons.audiotrack, size: 36),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(basename(_audioFiles[index].path)),
                   ),
-                ),
-                IconButton(
-                    icon: const Icon(Icons.play_circle_outline),
-                    iconSize: 30,
-                    onPressed: () {}),
-              ],
-            ),
-          );
+                ],
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AudioPlayerPage(audioFile: _audioFiles[index]),
+                  ),
+                );
+              });
         },
       ),
     );
