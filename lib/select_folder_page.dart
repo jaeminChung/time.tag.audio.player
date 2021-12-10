@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:time_tag_audio_player/audio_list_page.dart';
 import 'package:time_tag_audio_player/folder_item.dart';
 
 class SelectFolderPage extends StatefulWidget {
@@ -107,18 +108,12 @@ class _SelectFolderPageState extends State<SelectFolderPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Time tag audio player')),
       body: Builder(
-        builder: (context) => Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: ListView.builder(
-              padding: const EdgeInsets.all(8),
-              itemCount: _audioFolders.length,
-              itemBuilder: (context, index) {
-                return Center(
-                    child: buildFolderCard(context, _audioFolders.elementAt(index)));
-              },
-            ),
-          ),
+        builder: (context) => ListView.builder(
+//          padding: const EdgeInsets.all(8),
+          itemCount: _audioFolders.length,
+          itemBuilder: (context, index) {
+            return buildFolderCard(context, _audioFolders.elementAt(index));
+          },
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -130,27 +125,16 @@ class _SelectFolderPageState extends State<SelectFolderPage> {
   }
 
   Widget buildFolderCard(BuildContext context, FolderItem item) {
-    return Card(
-      elevation: 2.0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
+    return ListTile(
+        title: Row(
           children: <Widget>[
-            const Icon(Icons.folder_open, size: 36),
+            const Icon(Icons.library_music_outlined, size: 36),
             const SizedBox(width: 8),
             Expanded(
-                child: TextButton(
-              style: TextButton.styleFrom(
-                textStyle: const TextStyle(fontSize: 20),
-              ),
-              onPressed: () {
-                Navigator.pushNamed(context, "/AudioList");
-              },
               child: Text(
                 item.folder.replaceFirst('/sdcard/', ''),
               ),
-            )),
+            ),
             IconButton(
                 icon: const Icon(Icons.play_circle_outline),
                 iconSize: 30,
@@ -163,7 +147,13 @@ class _SelectFolderPageState extends State<SelectFolderPage> {
                 }),
           ],
         ),
-      ),
-    );
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AudioListPage(folderItem : item),
+            ),
+          );
+        });
   }
 }

@@ -29,8 +29,6 @@ class _MyAppState extends State<MyApp> {
           secondary: Colors.black,
         ),
       ),
-      initialRoute: '/',
-      routes: {"/AudioList" : (screenContext) => const AudioListPage()},
       home: const SelectFolderPage(),
     );
   }
