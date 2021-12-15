@@ -93,8 +93,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
               top: screenHeight * 0.1,
               height: screenHeight * 0.36,
               child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(40),
+                  decoration: const BoxDecoration(
                     color: Colors.white,
                     backgroundBlendMode: BlendMode.softLight,
                   ),
