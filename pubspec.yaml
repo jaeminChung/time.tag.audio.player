@@ -39,6 +39,7 @@ dependencies:
   permission_handler: ^8.3.0
   audioplayers: ^0.20.1
   audiotagger: ^2.2.1
+  widget_marquee: ^0.0.5
 
 dev_dependencies:
   flutter_test:
