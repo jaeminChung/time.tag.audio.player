@@ -18,7 +18,8 @@ class _AudioFileState extends State<AudioFile> {
   bool isPlaying = false;
   bool isPaused = false;
   bool isRepeat = false;
-  Color color = Colors.black;
+  bool isShuffle = false;
+
   final List<IconData> _icons = [
     Icons.play_circle_fill,
     Icons.pause_circle_filled,
@@ -44,7 +45,7 @@ class _AudioFileState extends State<AudioFile> {
     widget.advancedPlayer.onPlayerCompletion.listen((event) {
       setState(() {
         _position = const Duration(seconds: 0);
-        if (isRepeat == true) {
+        if (isRepeat) {
           isPlaying = true;
         } else {
           isPlaying = false;
@@ -66,7 +67,7 @@ class _AudioFileState extends State<AudioFile> {
           setState(() {
             isPlaying = true;
           });
-        } else if (isPlaying == true) {
+        } else if (isPlaying) {
           widget.advancedPlayer.pause();
           setState(() {
             isPlaying = false;
@@ -104,34 +105,35 @@ class _AudioFileState extends State<AudioFile> {
 
   Widget btnShuffle() {
     return IconButton(
-      icon: const Icon(
+      icon: Icon(
         Icons.shuffle,
         size: _iconSize,
-        color: Colors.black,
+        color: isShuffle ? Colors.red : Colors.black,
       ),
-      onPressed: () {},
+      onPressed: () {
+        setState(() {
+          isShuffle = !isShuffle;
+        });
+      },
     );
   }
 
   Widget btnRepeat() {
     return IconButton(
-      icon: const Icon(
+      icon: Icon(
         Icons.loop,
         size: _iconSize,
-        color: Colors.black,
+        color: isRepeat ? Colors.red : Colors.black,
       ),
       onPressed: () {
-        if (isRepeat == false) {
-          widget.advancedPlayer.setReleaseMode(ReleaseMode.LOOP);
-          setState(() {
-            isRepeat = true;
-            color = Colors.blue;
-          });
-        } else if (isRepeat == true) {
-          widget.advancedPlayer.setReleaseMode(ReleaseMode.RELEASE);
-          color = Colors.black;
-          isRepeat = false;
-        }
+        setState(() {
+          isRepeat = !isRepeat;
+          if (isRepeat) {
+            widget.advancedPlayer.setReleaseMode(ReleaseMode.RELEASE);
+          } else {
+            widget.advancedPlayer.setReleaseMode(ReleaseMode.LOOP);
+          }
+        });
       },
     );
   }
@@ -161,36 +163,36 @@ class _AudioFileState extends State<AudioFile> {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-      btnRepeat(),
-      btnSlow(),
-      btnStart(),
-      btnFast(),
-      btnShuffle()
-    ]);
+          btnRepeat(),
+          btnSlow(),
+          btnStart(),
+          btnFast(),
+          btnShuffle()
+        ]);
   }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-    Padding(
-      padding: const EdgeInsets.only(left: 20, right: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            _position.toString().split(".")[0],
-            style: const TextStyle(fontSize: 16),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _position.toString().split(".")[0],
+                style: const TextStyle(fontSize: 16),
+              ),
+              Text(
+                _duration.toString().split(".")[0],
+                style: const TextStyle(fontSize: 16),
+              ),
+            ],
           ),
-          Text(
-            _duration.toString().split(".")[0],
-            style: const TextStyle(fontSize: 16),
-          ),
-        ],
-      ),
-    ),
-    slider(),
-    loadAsset(),
+        ),
+        slider(),
+        loadAsset(),
       ],
     );
   }
