@@ -22,6 +22,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
   Tag? _audioTag;
   Image? _audioArtwork;
   final Audiotagger _tagger = Audiotagger();
+  final _commentController = TextEditingController();
 
   @override
   void initState() {
@@ -36,6 +37,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     final tag = await _tagger.readTags(path: widget.audioFile.path);
     setState(() {
       _audioTag = tag;
+      _commentController.text = _audioTag?.comment ?? '';
     });
   }
 
@@ -44,6 +46,27 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     setState(() {
       _audioArtwork = Image.memory(artwork!);
     });
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _writeTags(BuildContext context) async {
+    Tag tags = _audioTag ?? Tag();
+    tags.comment = _commentController.text;
+
+    final output = await _tagger.writeTags(
+      path: widget.audioFile.path,
+      tag: tags,
+    );
+
+    const snackBar = SnackBar(
+      content: Text('Saved!'),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   @override
@@ -91,9 +114,10 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
               left: 0,
               right: 0,
               top: screenHeight * 0.1,
-              height: screenHeight * 0.36,
+              height: screenHeight * 0.8,
               child: Container(
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
                     color: Colors.white,
                     backgroundBlendMode: BlendMode.softLight,
                   ),
@@ -119,6 +143,30 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
                       AudioFile(
                           advancedPlayer: advancedPlayer,
                           audioPath: widget.audioFile.path),
+                      TextField(
+                        controller: _commentController,
+                        minLines: 10,
+                        maxLines: 13,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText: 'Enter time tag (ex. 00:00 Tile)',
+                        ),
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      ElevatedButton(
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.all(16.0),
+                          primary: Colors.white,
+                          backgroundColor: Colors.black38,
+                          textStyle: const TextStyle(fontSize: 15),
+                        ),
+                        onPressed: () {
+                          _writeTags(context);
+                        },
+                        child: const Text('Save Tag'),
+                      ),
                     ],
                   ))),
         ],

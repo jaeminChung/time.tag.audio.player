@@ -24,6 +24,8 @@ class _AudioFileState extends State<AudioFile> {
     Icons.pause_circle_filled,
   ];
 
+  static const double _iconSize = 30;
+
   @override
   void initState() {
     super.initState();
@@ -56,8 +58,8 @@ class _AudioFileState extends State<AudioFile> {
     return IconButton(
       padding: const EdgeInsets.only(bottom: 10),
       icon: isPlaying == false
-          ? Icon(_icons[0], size: 50, color: Colors.blue)
-          : Icon(_icons[1], size: 50, color: Colors.blue),
+          ? Icon(_icons[0], size: 50)
+          : Icon(_icons[1], size: 50),
       onPressed: () {
         if (isPlaying == false) {
           widget.advancedPlayer.play(widget.audioPath);
@@ -78,7 +80,7 @@ class _AudioFileState extends State<AudioFile> {
     return IconButton(
       icon: const Icon(
         Icons.skip_next,
-        size: 15,
+        size: _iconSize,
         color: Colors.black,
       ),
       onPressed: () {
@@ -91,7 +93,7 @@ class _AudioFileState extends State<AudioFile> {
     return IconButton(
       icon: const Icon(
         Icons.skip_previous,
-        size: 15,
+        size: _iconSize,
         color: Colors.black,
       ),
       onPressed: () {
@@ -100,11 +102,11 @@ class _AudioFileState extends State<AudioFile> {
     );
   }
 
-  Widget btnLoop() {
+  Widget btnShuffle() {
     return IconButton(
       icon: const Icon(
-        Icons.loop,
-        size: 15,
+        Icons.shuffle,
+        size: _iconSize,
         color: Colors.black,
       ),
       onPressed: () {},
@@ -115,7 +117,7 @@ class _AudioFileState extends State<AudioFile> {
     return IconButton(
       icon: const Icon(
         Icons.loop,
-        size: 15,
+        size: _iconSize,
         color: Colors.black,
       ),
       onPressed: () {
@@ -163,7 +165,7 @@ class _AudioFileState extends State<AudioFile> {
       btnSlow(),
       btnStart(),
       btnFast(),
-      btnLoop()
+      btnShuffle()
     ]);
   }
 
