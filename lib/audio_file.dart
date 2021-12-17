@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:audiotagger/audiotagger.dart';
 import 'package:audiotagger/models/tag.dart';
@@ -22,8 +24,12 @@ class _AudioFileState extends State<AudioFile> {
   bool isPaused = false;
   bool isRepeat = false;
   bool isShuffle = false;
+  String? audioTitle;
+  String? audioArtist;
   final Audiotagger _tagger = Audiotagger();
   Tag? _audioTag;
+  final List<Map<String, dynamic>> audioList = [];
+  var _forceRedraw;
 
   final List<IconData> _icons = [
     Icons.play_circle_fill,
@@ -35,6 +41,8 @@ class _AudioFileState extends State<AudioFile> {
   @override
   void initState() {
     super.initState();
+
+    _forceRedraw = Object();
     widget.advancedPlayer.onDurationChanged.listen((d) {
       setState(() {
         _duration = d;
@@ -65,19 +73,33 @@ class _AudioFileState extends State<AudioFile> {
     final tag = await _tagger.readTags(path: widget.audioPath);
     setState(() {
       _audioTag = tag;
+      audioTitle = _audioTag?.title;
+      audioArtist = _audioTag?.artist;
       parseAudioList();
     });
   }
 
   void parseAudioList() {
     String comment = _audioTag?.comment ?? '';
-    RegExp regExp = RegExp(r'(\d{1,2}:\d{1,2}(:\d{1,2})?)[ \t]+(.+)$', multiLine: true);
+    RegExp regExp =
+        RegExp(r'(\d{1,2}:\d{1,2}(:\d{1,2})?)[ \t]+(.+)$', multiLine: true);
     Iterable<RegExpMatch> allMatches = regExp.allMatches(comment);
     allMatches.forEach((m) {
       final time = m.group(1);
       final title = m.group(3);
-
+      audioList.add({'time': calcSecond(time ?? '0'), 'title': title});
     });
+  }
+
+  int calcSecond(String time) {
+    List<String> times = time.split(':');
+    int second = 0;
+    int length = times.length;
+    for (int i = 0; i < length; i++) {
+      second = second + int.parse(times[i]) * pow(60, length - i - 1).toInt();
+    }
+
+    return second;
   }
 
   Widget btnStart() {
@@ -110,7 +132,18 @@ class _AudioFileState extends State<AudioFile> {
         color: Colors.black,
       ),
       onPressed: () {
-        widget.advancedPlayer.setPlaybackRate(1.5);
+        int curr = _position.inSeconds;
+        for (int i = 0; i < audioList.length; i++) {
+          Map<String, dynamic> audio = audioList[i];
+          if (audio['time'] > curr) {
+            setState(() {
+              audioTitle = audio['title'];
+              _forceRedraw = Object();
+            });
+            changeToSecond(audio['time']);
+            break;
+          }
+        }
       },
     );
   }
@@ -123,7 +156,18 @@ class _AudioFileState extends State<AudioFile> {
         color: Colors.black,
       ),
       onPressed: () {
-        widget.advancedPlayer.setPlaybackRate(0.5);
+        int curr = _position.inSeconds;
+        for (int i = audioList.length; i > 0 ; i--) {
+          Map<String, dynamic> audio = audioList[i-1];
+          if (audio['time'] < curr) {
+            setState(() {
+              audioTitle = audio['title'];
+              _forceRedraw = Object();
+            });
+            changeToSecond(audio['time']);
+            break;
+          }
+        }
       },
     );
   }
@@ -198,20 +242,18 @@ class _AudioFileState extends State<AudioFile> {
 
   Widget loadTitle() {
     return Marquee(
-      loopDuration: const Duration(milliseconds: 5000),
+      key: ValueKey(_forceRedraw),
       child: Text(
-        _audioTag?.title ?? "Unnamed",
+        audioTitle ?? 'Untitle',
         style: const TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.bold,
-            fontFamily: "Avenir"),
+            fontSize: 30, fontWeight: FontWeight.bold, fontFamily: "Avenir"),
       ),
     );
   }
 
   Widget loadArtist() {
     return Text(
-      _audioTag?.artist ?? "Unknown",
+      audioArtist ?? "Unknown",
       style: const TextStyle(fontSize: 20),
     );
   }
@@ -234,6 +276,7 @@ class _AudioFileState extends State<AudioFile> {
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Column(
