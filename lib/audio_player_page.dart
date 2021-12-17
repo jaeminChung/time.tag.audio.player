@@ -5,7 +5,6 @@ import 'package:audiotagger/audiotagger.dart';
 import 'package:audiotagger/models/tag.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:widget_marquee/widget_marquee.dart';
 
 import 'audio_file.dart';
 
@@ -126,20 +125,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
                       SizedBox(
                         height: screenHeight * 0.1,
                       ),
-                      Marquee(
-                        loopDuration: const Duration(milliseconds: 5000),
-                        child: Text(
-                          _audioTag?.title ?? "Unnamed",
-                          style: const TextStyle(
-                              fontSize: 30,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: "Avenir"),
-                        ),
-                      ),
-                      Text(
-                        _audioTag?.artist ?? "Unknown",
-                        style: const TextStyle(fontSize: 20),
-                      ),
+
                       AudioFile(
                           advancedPlayer: advancedPlayer,
                           audioPath: widget.audioFile.path),

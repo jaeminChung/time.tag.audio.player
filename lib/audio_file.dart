@@ -1,5 +1,8 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:audiotagger/audiotagger.dart';
+import 'package:audiotagger/models/tag.dart';
 import 'package:flutter/material.dart';
+import 'package:widget_marquee/widget_marquee.dart';
 
 class AudioFile extends StatefulWidget {
   final AudioPlayer advancedPlayer;
@@ -19,6 +22,8 @@ class _AudioFileState extends State<AudioFile> {
   bool isPaused = false;
   bool isRepeat = false;
   bool isShuffle = false;
+  final Audiotagger _tagger = Audiotagger();
+  Tag? _audioTag;
 
   final List<IconData> _icons = [
     Icons.play_circle_fill,
@@ -53,6 +58,26 @@ class _AudioFileState extends State<AudioFile> {
         }
       });
     });
+    readTag();
+  }
+
+  Future<void> readTag() async {
+    final tag = await _tagger.readTags(path: widget.audioPath);
+    setState(() {
+      _audioTag = tag;
+      parseAudioList();
+    });
+  }
+
+  void parseAudioList() {
+    String comment = _audioTag?.comment ?? '';
+    RegExp regExp = RegExp(r'(\d{1,2}:\d{1,2}(:\d{1,2})?)[ \t]+(.+)$', multiLine: true);
+    Iterable<RegExpMatch> allMatches = regExp.allMatches(comment);
+    allMatches.forEach((m) {
+      final time = m.group(1);
+      final title = m.group(3);
+
+    });
   }
 
   Widget btnStart() {
@@ -77,7 +102,7 @@ class _AudioFileState extends State<AudioFile> {
     );
   }
 
-  Widget btnFast() {
+  Widget btnNext() {
     return IconButton(
       icon: const Icon(
         Icons.skip_next,
@@ -90,7 +115,7 @@ class _AudioFileState extends State<AudioFile> {
     );
   }
 
-  Widget btnSlow() {
+  Widget btnPrevious() {
     return IconButton(
       icon: const Icon(
         Icons.skip_previous,
@@ -164,33 +189,58 @@ class _AudioFileState extends State<AudioFile> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           btnRepeat(),
-          btnSlow(),
+          btnPrevious(),
           btnStart(),
-          btnFast(),
+          btnNext(),
           btnShuffle()
         ]);
   }
 
+  Widget loadTitle() {
+    return Marquee(
+      loopDuration: const Duration(milliseconds: 5000),
+      child: Text(
+        _audioTag?.title ?? "Unnamed",
+        style: const TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+            fontFamily: "Avenir"),
+      ),
+    );
+  }
+
+  Widget loadArtist() {
+    return Text(
+      _audioTag?.artist ?? "Unknown",
+      style: const TextStyle(fontSize: 20),
+    );
+  }
+
+  Widget loadStartEndTime() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 20, right: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            _position.toString().split(".")[0],
+            style: const TextStyle(fontSize: 16),
+          ),
+          Text(
+            _duration.toString().split(".")[0],
+            style: const TextStyle(fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _position.toString().split(".")[0],
-                style: const TextStyle(fontSize: 16),
-              ),
-              Text(
-                _duration.toString().split(".")[0],
-                style: const TextStyle(fontSize: 16),
-              ),
-            ],
-          ),
-        ),
+        loadTitle(),
+        loadArtist(),
+        loadStartEndTime(),
         slider(),
         loadAsset(),
       ],
