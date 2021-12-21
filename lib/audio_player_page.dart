@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:audiotagger/audiotagger.dart';
 import 'package:audiotagger/models/tag.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'audio_file.dart';
+import 'audio_tag.dart';
 
 class AudioPlayerPage extends StatefulWidget {
   final FileSystemEntity audioFile;
@@ -18,8 +18,8 @@ class AudioPlayerPage extends StatefulWidget {
 
 class _AudioPlayerPageState extends State<AudioPlayerPage> {
   late final AudioPlayer advancedPlayer;
-  Tag? _audioTag;
-  Image? _audioArtwork;
+  late final AudioTag audioTag;
+
   final Audiotagger _tagger = Audiotagger();
   final _commentController = TextEditingController();
 
@@ -28,22 +28,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     super.initState();
     advancedPlayer = AudioPlayer();
 
-    _readTag();
-    _readArtwork();
-  }
-
-  Future<void> _readTag() async {
-    final tag = await _tagger.readTags(path: widget.audioFile.path);
     setState(() {
-      _audioTag = tag;
-      _commentController.text = _audioTag?.comment ?? '';
-    });
-  }
-
-  Future<void> _readArtwork() async {
-    final artwork = await _tagger.readArtwork(path: widget.audioFile.path);
-    setState(() {
-      _audioArtwork = Image.memory(artwork!);
     });
   }
 
@@ -54,13 +39,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
   }
 
   Future<void> _writeTags(BuildContext context) async {
-    Tag tags = _audioTag ?? Tag();
-    tags.comment = _commentController.text;
-
-    final output = await _tagger.writeTags(
-      path: widget.audioFile.path,
-      tag: tags,
-    );
+    audioTag.writeTags(comment: _commentController.text);
 
     const snackBar = SnackBar(
       content: Text('Saved!'),
@@ -78,17 +57,16 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
       body: Stack(
         children: [
           Positioned(
-            top: 0,
+            top: 30,
             left: 0,
             right: 0,
-            height: screenHeight,
+            height: 130,
             child: Container(
               decoration: BoxDecoration(
                   //borderRadius: BorderRadius.circular(20),
                   shape: BoxShape.rectangle,
                   image: DecorationImage(
-                      image: _audioArtwork?.image ??
-                          const AssetImage('img/pic-1.png'),
+                      image: audioTag.artworkImageProvider,
                       fit: BoxFit.cover)),
             ),
           ),
@@ -128,7 +106,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
 
                       AudioFile(
                           advancedPlayer: advancedPlayer,
-                          audioPath: widget.audioFile.path),
+                          audioTag: audioTag),
                       TextField(
                         controller: _commentController,
                         minLines: 10,

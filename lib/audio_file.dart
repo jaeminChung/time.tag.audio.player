@@ -1,16 +1,14 @@
-import 'dart:math';
-
 import 'package:audioplayers/audioplayers.dart';
-import 'package:audiotagger/audiotagger.dart';
-import 'package:audiotagger/models/tag.dart';
 import 'package:flutter/material.dart';
 import 'package:widget_marquee/widget_marquee.dart';
 
+import 'audio_tag.dart';
+
 class AudioFile extends StatefulWidget {
   final AudioPlayer advancedPlayer;
-  final String audioPath;
+  final AudioTag audioTag;
   const AudioFile(
-      {Key? key, required this.advancedPlayer, required this.audioPath})
+      {Key? key, required this.advancedPlayer, required this.audioTag})
       : super(key: key);
 
   @override
@@ -26,10 +24,7 @@ class _AudioFileState extends State<AudioFile> {
   bool isShuffle = false;
   String? audioTitle;
   String? audioArtist;
-  final Audiotagger _tagger = Audiotagger();
-  Tag? _audioTag;
   final List<Map<String, dynamic>> audioList = [];
-  var _forceRedraw;
 
   final List<IconData> _icons = [
     Icons.play_circle_fill,
@@ -42,7 +37,6 @@ class _AudioFileState extends State<AudioFile> {
   void initState() {
     super.initState();
 
-    _forceRedraw = Object();
     widget.advancedPlayer.onDurationChanged.listen((d) {
       setState(() {
         _duration = d;
@@ -54,7 +48,7 @@ class _AudioFileState extends State<AudioFile> {
       });
     });
 
-    widget.advancedPlayer.setUrl(widget.audioPath);
+    widget.advancedPlayer.setUrl(widget.audioTag.audioPath);
     widget.advancedPlayer.onPlayerCompletion.listen((event) {
       setState(() {
         _position = const Duration(seconds: 0);
@@ -70,36 +64,10 @@ class _AudioFileState extends State<AudioFile> {
   }
 
   Future<void> readTag() async {
-    final tag = await _tagger.readTags(path: widget.audioPath);
     setState(() {
-      _audioTag = tag;
-      audioTitle = _audioTag?.title;
-      audioArtist = _audioTag?.artist;
-      parseAudioList();
+      audioTitle = widget.audioTag.title;
+      audioArtist = widget.audioTag.artist;
     });
-  }
-
-  void parseAudioList() {
-    String comment = _audioTag?.comment ?? '';
-    RegExp regExp =
-        RegExp(r'(\d{1,2}:\d{1,2}(:\d{1,2})?)[ \t]+(.+)$', multiLine: true);
-    Iterable<RegExpMatch> allMatches = regExp.allMatches(comment);
-    allMatches.forEach((m) {
-      final time = m.group(1);
-      final title = m.group(3);
-      audioList.add({'time': calcSecond(time ?? '0'), 'title': title});
-    });
-  }
-
-  int calcSecond(String time) {
-    List<String> times = time.split(':');
-    int second = 0;
-    int length = times.length;
-    for (int i = 0; i < length; i++) {
-      second = second + int.parse(times[i]) * pow(60, length - i - 1).toInt();
-    }
-
-    return second;
   }
 
   Widget btnStart() {
@@ -110,7 +78,7 @@ class _AudioFileState extends State<AudioFile> {
           : Icon(_icons[1], size: 50),
       onPressed: () {
         if (isPlaying == false) {
-          widget.advancedPlayer.play(widget.audioPath);
+          widget.advancedPlayer.play(widget.audioTag.audioPath);
           setState(() {
             isPlaying = true;
           });
@@ -138,7 +106,6 @@ class _AudioFileState extends State<AudioFile> {
           if (audio['time'] > curr) {
             setState(() {
               audioTitle = audio['title'];
-              _forceRedraw = Object();
             });
             changeToSecond(audio['time']);
             break;
@@ -162,7 +129,6 @@ class _AudioFileState extends State<AudioFile> {
           if (audio['time'] < curr) {
             setState(() {
               audioTitle = audio['title'];
-              _forceRedraw = Object();
             });
             changeToSecond(audio['time']);
             break;
@@ -242,7 +208,6 @@ class _AudioFileState extends State<AudioFile> {
 
   Widget loadTitle() {
     return Marquee(
-      key: ValueKey(_forceRedraw),
       child: Text(
         audioTitle ?? 'Untitle',
         style: const TextStyle(
