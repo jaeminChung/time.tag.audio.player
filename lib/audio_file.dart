@@ -101,16 +101,11 @@ class _AudioFileState extends State<AudioFile> {
       ),
       onPressed: () {
         int curr = _position.inSeconds;
-        for (int i = 0; i < audioList.length; i++) {
-          Map<String, dynamic> audio = audioList[i];
-          if (audio['time'] > curr) {
-            setState(() {
-              audioTitle = audio['title'];
-            });
-            changeToSecond(audio['time']);
-            break;
-          }
-        }
+        Map<String, dynamic> audio = widget.audioTag.getNextAudio(curr);
+        setState(() {
+          audioTitle = audio['title'];
+        });
+        changeToSecond(audio['time']);
       },
     );
   }
@@ -124,16 +119,11 @@ class _AudioFileState extends State<AudioFile> {
       ),
       onPressed: () {
         int curr = _position.inSeconds;
-        for (int i = audioList.length; i > 0 ; i--) {
-          Map<String, dynamic> audio = audioList[i-1];
-          if (audio['time'] < curr) {
-            setState(() {
-              audioTitle = audio['title'];
-            });
-            changeToSecond(audio['time']);
-            break;
-          }
-        }
+        Map<String, dynamic> audio = widget.audioTag.getPreviousAudio(curr);
+        setState(() {
+          audioTitle = audio['title'];
+        });
+        changeToSecond(audio['time']);
       },
     );
   }

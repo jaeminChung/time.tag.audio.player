@@ -7,38 +7,35 @@ import 'package:audiotagger/models/tag.dart';
 import 'package:flutter/material.dart';
 
 class AudioTag {
-  late final FileSystemEntity file;
-  late Tag tag;
-  Image? artwork;
+  final FileSystemEntity file;
+  Tag tag;
+  Image artwork;
   static final Audiotagger tagger = Audiotagger();
   final List<Map<String, dynamic>> audioList = [];
 
-  AudioTag(FileSystemEntity audioFile) {
-    file = audioFile;
-    _readFile();
-  }
+  AudioTag(this.file, this.tag, this.artwork);
 
-  Future<void> _readFile() async {
-    tag = await tagger.readTags(path: file.path) ?? Tag();
+  static Future<AudioTag> of(FileSystemEntity file) async {
+    Tag tag = await tagger.readTags(path: file.path) ?? Tag();
     Uint8List? memory = await tagger.readArtwork(path: file.path);
-    artwork = memory != null ? Image.memory(memory) : null;
+    Image artwork =
+        memory != null ? Image.memory(memory) : Image.asset('img/pic-1.png');
+
+    AudioTag result = AudioTag(file, tag, artwork);
+    result.parseAudioList();
+
+    return result;
   }
 
-  static Future<AudioTag> of(FileSystemEntity file) {
-    Future<AudioTag> tag = Future(() {
-      return AudioTag(file);
-    });
-    return tag;
-  }
-
-  get artworkImageProvider => artwork?.image ?? const AssetImage('img/pic-1.png');
+  get artworkImageProvider => artwork.image;
   get audioPath => file.path;
   get title => tag.title;
   get artist => tag.artist;
+  get comment => tag.comment;
 
   void parseAudioList() {
     RegExp regExp =
-    RegExp(r'(\d{1,2}:\d{1,2}(:\d{1,2})?)[ \t]+(.+)$', multiLine: true);
+        RegExp(r'(\d{1,2}:\d{1,2}(:\d{1,2})?)[ \t]+(.+)$', multiLine: true);
 
     String comment = tag.comment ?? '';
     Iterable<RegExpMatch> allMatches = regExp.allMatches(comment);
@@ -62,6 +59,25 @@ class AudioTag {
     return second;
   }
 
+  Map<String, dynamic> getPreviousAudio(int currTime) {
+    for (int i = audioList.length; i > 0; i--) {
+      Map<String, dynamic> audio = audioList[i - 1];
+      if (audio['time'] < currTime) {
+        return audio;
+      }
+    }
+    return audioList[0];
+  }
+
+  Map<String, dynamic> getNextAudio(int currTime) {
+    for (int i = 0; i < audioList.length; i++) {
+      Map<String, dynamic> audio = audioList[i];
+      if (audio['time'] > currTime) {
+        return audio;
+      }
+    }
+    return audioList.last;
+  }
 
   Future<bool?> writeTags(
       {String? title,

@@ -18,7 +18,7 @@ class AudioPlayerPage extends StatefulWidget {
 
 class _AudioPlayerPageState extends State<AudioPlayerPage> {
   late final AudioPlayer advancedPlayer;
-  late final AudioTag audioTag;
+  late final Future<AudioTag> audioTag;
 
   final Audiotagger _tagger = Audiotagger();
   final _commentController = TextEditingController();
@@ -29,6 +29,8 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     advancedPlayer = AudioPlayer();
 
     setState(() {
+      audioTag = AudioTag.of(widget.audioFile);
+      audioTag.then((value) => _commentController.text = value.comment);
     });
   }
 
@@ -39,7 +41,9 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
   }
 
   Future<void> _writeTags(BuildContext context) async {
-    audioTag.writeTags(comment: _commentController.text);
+    audioTag.then((t) {
+      t.writeTags(comment: _commentController.text);
+    });
 
     const snackBar = SnackBar(
       content: Text('Saved!'),
@@ -54,87 +58,94 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
 
     return Scaffold(
       backgroundColor: Colors.grey,
-      body: Stack(
-        children: [
-          Positioned(
-            top: 30,
-            left: 0,
-            right: 0,
-            height: 130,
-            child: Container(
-              decoration: BoxDecoration(
-                  //borderRadius: BorderRadius.circular(20),
-                  shape: BoxShape.rectangle,
-                  image: DecorationImage(
-                      image: audioTag.artworkImageProvider,
-                      fit: BoxFit.cover)),
-            ),
-          ),
-          Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: AppBar(
-                leading: IconButton(
-                  icon: const Icon(
-                    Icons.arrow_back_ios,
+      body: FutureBuilder<AudioTag>(
+          future: audioTag,
+          builder: (BuildContext context, AsyncSnapshot<AudioTag> snapshot) {
+            if (snapshot.hasData) {
+              return Stack(
+                children: [
+                  Positioned(
+                    top: 30,
+                    left: 0,
+                    right: 0,
+                    height: 130,
+                    child: Container(
+                      decoration: BoxDecoration(
+                          //borderRadius: BorderRadius.circular(20),
+                          shape: BoxShape.rectangle,
+                          image: DecorationImage(
+                              image: snapshot.data?.artworkImageProvider,
+                              fit: BoxFit.cover)),
+                    ),
                   ),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    advancedPlayer.stop();
-                  },
-                ),
-                backgroundColor: Colors.transparent,
-                elevation: 0.0,
-              )),
-          Positioned(
-              left: 0,
-              right: 0,
-              top: screenHeight * 0.1,
-              height: screenHeight * 0.8,
-              child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    color: Colors.white,
-                    backgroundBlendMode: BlendMode.softLight,
-                  ),
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        height: screenHeight * 0.1,
-                      ),
-
-                      AudioFile(
-                          advancedPlayer: advancedPlayer,
-                          audioTag: audioTag),
-                      TextField(
-                        controller: _commentController,
-                        minLines: 10,
-                        maxLines: 13,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: 'Enter time tag (ex. 00:00 Tile)',
+                  Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: AppBar(
+                        leading: IconButton(
+                          icon: const Icon(
+                            Icons.arrow_back_ios,
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            advancedPlayer.stop();
+                          },
                         ),
-                      ),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      ElevatedButton(
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.all(16.0),
-                          primary: Colors.white,
-                          backgroundColor: Colors.black38,
-                          textStyle: const TextStyle(fontSize: 15),
-                        ),
-                        onPressed: () {
-                          _writeTags(context);
-                        },
-                        child: const Text('Save Tag'),
-                      ),
-                    ],
-                  ))),
-        ],
-      ),
+                        backgroundColor: Colors.transparent,
+                        elevation: 0.0,
+                      )),
+                  Positioned(
+                      left: 0,
+                      right: 0,
+                      top: screenHeight * 0.1,
+                      height: screenHeight * 0.8,
+                      child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: Colors.white,
+                            backgroundBlendMode: BlendMode.softLight,
+                          ),
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                height: screenHeight * 0.1,
+                              ),
+                              AudioFile(
+                                  advancedPlayer: advancedPlayer,
+                                  audioTag: snapshot.data!),
+                              TextField(
+                                controller: _commentController,
+                                minLines: 10,
+                                maxLines: 13,
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  hintText: 'Enter time tag (ex. 00:00 Tile)',
+                                ),
+                              ),
+                              SizedBox(
+                                height: 10,
+                              ),
+                              ElevatedButton(
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.all(16.0),
+                                  primary: Colors.white,
+                                  backgroundColor: Colors.black38,
+                                  textStyle: const TextStyle(fontSize: 15),
+                                ),
+                                onPressed: () {
+                                  _writeTags(context);
+                                },
+                                child: const Text('Save Tag'),
+                              ),
+                            ],
+                          ))),
+                ],
+              );
+            } else {
+              return const CircularProgressIndicator();
+            }
+          }),
     );
   }
 }
