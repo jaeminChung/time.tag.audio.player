@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:audiotagger/audiotagger.dart';
 import 'package:audiotagger/models/tag.dart';
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 
 class AudioFile {
   final FileSystemEntity file;
@@ -22,7 +24,6 @@ class AudioFile {
         memory != null ? Image.memory(memory) : Image.asset('img/pic-1.png');
 
     AudioFile result = AudioFile(file, tag, artwork);
-    result.parseAudioList();
 
     return result;
   }
@@ -32,20 +33,48 @@ class AudioFile {
   get title => tag.title;
   get artist => tag.artist;
   get comment => tag.comment;
+  get album => tag.album;
 
-  void parseAudioList() {
+  ConcatenatingAudioSource createPlayList() {
+    List<AudioSource> audioSource = [];
+
     RegExp regExp =
         RegExp(r'(\d{1,2}:\d{1,2}(:\d{1,2})?)[ \t]+(.+)$', multiLine: true);
 
     String comment = tag.comment ?? '';
     Iterable<RegExpMatch> allMatches = regExp.allMatches(comment);
 
-    audioList.clear();
+    UriAudioSource uriAudioSource = AudioSource.uri(Uri.parse(audioPath));
+    int start = 0;
+    int end = 0;
+    String title = '';
     for (var m in allMatches) {
-      final time = m.group(1);
-      final title = m.group(3);
-      audioList.add({'time': calcSecond(time ?? '0'), 'title': title});
+      final time = m.group(1) ?? '0';
+      int end = calcSecond(time);
+
+      if (start < end) {
+        audioSource.add(ClippingAudioSource(
+          child: uriAudioSource,
+          start: Duration(seconds: start),
+          end: Duration(seconds: end),
+          tag: MediaItem(id: start.toString(), title: title, album: album, artist: artist),
+        ));
+      }
+      title = m.group(3) ?? this.title;
+      start = end;
     }
+    audioSource.add(ClippingAudioSource(
+      child: uriAudioSource,
+      start: Duration(seconds: start),
+      tag: MediaItem(
+          id: start.toString(),
+          title: title == '' ? this.title : title,
+          album: album),
+    ));
+
+    return ConcatenatingAudioSource(
+      children: audioSource,
+    );
   }
 
   int calcSecond(String time) {
