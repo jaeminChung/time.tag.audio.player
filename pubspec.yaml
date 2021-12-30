@@ -41,6 +41,7 @@ dependencies:
   audio_session: ^0.1.6+1
   rxdart: ^0.27.3
   just_audio_background: ^0.0.1-beta.2
+  sliding_up_panel: ^2.0.0+1
 
 dev_dependencies:
   flutter_test:

@@ -17,6 +17,7 @@ class SelectFolderPage extends StatefulWidget {
 
 class _SelectFolderPageState extends State<SelectFolderPage> {
   final Set<FolderItem> _audioFolders = {};
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -103,6 +104,12 @@ class _SelectFolderPageState extends State<SelectFolderPage> {
     );
   }
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -115,6 +122,32 @@ class _SelectFolderPageState extends State<SelectFolderPage> {
             return buildFolderCard(context, _audioFolders.elementAt(index));
           },
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.folder_outlined),
+            label: 'Folder',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.library_music_outlined),
+            label: 'Album',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_box_outlined),
+            label: 'Artist',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.category_outlined),
+            label: 'Genre',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.black,
+        unselectedItemColor: Colors.grey,
+        unselectedLabelStyle: const TextStyle(color: Colors.grey),
+        showUnselectedLabels: true,
+        onTap: _onItemTapped,
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _pickDir(context),

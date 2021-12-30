@@ -5,6 +5,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 import 'audio_file.dart';
 import 'common.dart';
@@ -99,46 +100,83 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
 
   @override
   Widget build(BuildContext context) {
+    double _panelHeightClosed = 50.0;
+    double _panelHeightOpen = MediaQuery.of(context).size.height * .85;
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              FutureBuilder<AudioFile>(
-                  future: _audioFile,
-                  builder: (BuildContext context,
-                      AsyncSnapshot<AudioFile> snapshot) {
-                    if (snapshot.hasData) {
-                      return Column(
-                        children: [
-                          snapshot.data?.artwork ?? Text(''),
-                        ],
-                      );
-                    } else {
-                      return const CircularProgressIndicator();
-                    }
-                  }),
-              // Display play/pause button and volume/speed sliders.
-              ControlButtons(player: _player),
-              // Display seek bar. Using StreamBuilder, this widget rebuilds
-              // each time the position, buffered position or duration changes.
-              StreamBuilder<PositionData>(
-                stream: _positionDataStream,
-                builder: (context, snapshot) {
-                  final positionData = snapshot.data;
-                  return SeekBar(
-                    duration: positionData?.duration ?? Duration.zero,
-                    position: positionData?.position ?? Duration.zero,
-                    bufferedPosition:
-                        positionData?.bufferedPosition ?? Duration.zero,
-                    onChangeEnd: _player.seek,
-                  );
-                },
+        body: SlidingUpPanel(
+          maxHeight: _panelHeightOpen,
+          minHeight: _panelHeightClosed,
+          parallaxEnabled: true,
+          parallaxOffset: .5,
+          borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(18.0), topRight: Radius.circular(18.0)),
+          panel: Center(
+            child: TextField(
+              controller: _commentController,
+              minLines: 10,
+              maxLines: 13,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Enter time tag (ex. 00:00 Tile)',
               ),
-            ],
+            ),
+          ),
+          collapsed: Container(
+            decoration: const BoxDecoration(
+              color: Colors.blueGrey,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(18.0),
+                topRight: Radius.circular(18.0),
+              ),
+            ),
+            child: const Center(
+              child: Text(
+                "Time tagging",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+          body: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                FutureBuilder<AudioFile>(
+                    future: _audioFile,
+                    builder: (BuildContext context,
+                        AsyncSnapshot<AudioFile> snapshot) {
+                      if (snapshot.hasData) {
+                        return Column(
+                          children: [
+                            snapshot.data?.artwork ?? Text(''),
+                          ],
+                        );
+                      } else {
+                        return const CircularProgressIndicator();
+                      }
+                    }),
+                // Display play/pause button and volume/speed sliders.
+                ControlButtons(player: _player),
+                // Display seek bar. Using StreamBuilder, this widget rebuilds
+                // each time the position, buffered position or duration changes.
+                StreamBuilder<PositionData>(
+                  stream: _positionDataStream,
+                  builder: (context, snapshot) {
+                    final positionData = snapshot.data;
+                    return SeekBar(
+                      duration: positionData?.duration ?? Duration.zero,
+                      position: positionData?.position ?? Duration.zero,
+                      bufferedPosition:
+                          positionData?.bufferedPosition ?? Duration.zero,
+                      onChangeEnd: _player.seek,
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -161,12 +199,14 @@ class ControlButtons extends StatelessWidget {
             final state = snapshot.data;
             if (state?.sequence.isEmpty ?? true) return const SizedBox();
             final metadata = state!.currentSource!.tag as MediaItem;
-            return Column(crossAxisAlignment: CrossAxisAlignment.center,
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(metadata.album!,
                     style: Theme.of(context).textTheme.headline6),
                 Text(metadata.title),
-              ],);
+              ],
+            );
           }),
       Row(
         mainAxisSize: MainAxisSize.min,
@@ -191,9 +231,11 @@ class ControlButtons extends StatelessWidget {
             stream: player.sequenceStateStream,
             builder: (context, snapshot) => IconButton(
               icon: Icon(Icons.skip_previous),
+              iconSize: 48.0,
               onPressed: player.hasPrevious ? player.seekToPrevious : null,
             ),
           ),
+
           /// This StreamBuilder rebuilds whenever the player state changes, which
           /// includes the playing/paused state and also the
           /// loading/buffering/ready state. Depending on the state we show the
@@ -237,6 +279,7 @@ class ControlButtons extends StatelessWidget {
             stream: player.sequenceStateStream,
             builder: (context, snapshot) => IconButton(
               icon: Icon(Icons.skip_next),
+              iconSize: 48.0,
               onPressed: player.hasNext ? player.seekToNext : null,
             ),
           ),

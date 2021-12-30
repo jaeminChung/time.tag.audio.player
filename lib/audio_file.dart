@@ -34,6 +34,7 @@ class AudioFile {
   get artist => tag.artist;
   get comment => tag.comment;
   get album => tag.album;
+  get genre => tag.genre;
 
   ConcatenatingAudioSource createPlayList() {
     List<AudioSource> audioSource = [];
