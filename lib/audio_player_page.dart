@@ -1,11 +1,12 @@
 import 'dart:io';
 
 import 'package:audio_session/audio_session.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:time_tag_audio_player/id3_edit_page.dart';
 
 import 'audio_file.dart';
 import 'common.dart';
@@ -115,7 +116,14 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
         IconButton(
           icon: const Icon(Icons.edit),
           tooltip: 'Edit ID3 Tag',
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Id3EditPage(),
+              ),
+            );
+          },
         )
       ]),
       body: SlidingUpPanel(
@@ -217,7 +225,6 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
             const SizedBox(
               height: 36.0,
             ),
-
             const SizedBox(
               height: 24,
             ),
