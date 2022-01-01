@@ -25,6 +25,11 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
 
   final _commentController = TextEditingController();
 
+  final double _initFabHeight = 120.0;
+  double _fabHeight = 0;
+  double _panelHeightOpen = 0;
+  double _panelHeightClosed = 95.0;
+
   @override
   void initState() {
     super.initState();
@@ -32,6 +37,8 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
     _init();
 
     _audioFile = AudioFile.of(widget.audioFile);
+
+    _fabHeight = _initFabHeight;
 
     setState(() {
       _audioFile.then((value) => _commentController.text = value.comment);
@@ -103,84 +110,119 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
     double _panelHeightClosed = 50.0;
     double _panelHeightOpen = MediaQuery.of(context).size.height * .85;
 
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: SlidingUpPanel(
-          maxHeight: _panelHeightOpen,
-          minHeight: _panelHeightClosed,
-          parallaxEnabled: true,
-          parallaxOffset: .5,
-          borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(18.0), topRight: Radius.circular(18.0)),
-          panel: Center(
-            child: TextField(
-              controller: _commentController,
-              minLines: 10,
-              maxLines: 13,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Enter time tag (ex. 00:00 Tile)',
-              ),
-            ),
+    return Scaffold(
+      appBar: AppBar(actions: <Widget>[
+        IconButton(
+          icon: const Icon(Icons.edit),
+          tooltip: 'Edit ID3 Tag',
+          onPressed: () {},
+        )
+      ]),
+      body: SlidingUpPanel(
+        maxHeight: _panelHeightOpen,
+        minHeight: _panelHeightClosed,
+        parallaxEnabled: true,
+        parallaxOffset: .5,
+        body: _body(),
+        panelBuilder: (sc) => _panel(sc),
+        borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(18.0), topRight: Radius.circular(18.0)),
+        onPanelSlide: (double pos) => setState(() {
+          _fabHeight =
+              pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
+        }),
+      ),
+    );
+  }
+
+  Widget _body() {
+    return SafeArea(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          FutureBuilder<AudioFile>(
+              future: _audioFile,
+              builder:
+                  (BuildContext context, AsyncSnapshot<AudioFile> snapshot) {
+                if (snapshot.hasData) {
+                  return Column(
+                    children: [
+                      snapshot.data?.artwork ?? const Text(''),
+                    ],
+                  );
+                } else {
+                  return const CircularProgressIndicator();
+                }
+              }),
+          // Display play/pause button and volume/speed sliders.
+          ControlButtons(player: _player),
+          // Display seek bar. Using StreamBuilder, this widget rebuilds
+          // each time the position, buffered position or duration changes.
+          StreamBuilder<PositionData>(
+            stream: _positionDataStream,
+            builder: (context, snapshot) {
+              final positionData = snapshot.data;
+              return SeekBar(
+                duration: positionData?.duration ?? Duration.zero,
+                position: positionData?.position ?? Duration.zero,
+                bufferedPosition:
+                    positionData?.bufferedPosition ?? Duration.zero,
+                onChangeEnd: _player.seek,
+              );
+            },
           ),
-          collapsed: Container(
-            decoration: const BoxDecoration(
-              color: Colors.blueGrey,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(18.0),
-                topRight: Radius.circular(18.0),
-              ),
+        ],
+      ),
+    );
+  }
+
+  Widget _panel(ScrollController sc) {
+    return MediaQuery.removePadding(
+        context: context,
+        removeTop: true,
+        child: ListView(
+          controller: sc,
+          children: <Widget>[
+            const SizedBox(
+              height: 12.0,
             ),
-            child: const Center(
-              child: Text(
-                "Time tagging",
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ),
-          body: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+            Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                FutureBuilder<AudioFile>(
-                    future: _audioFile,
-                    builder: (BuildContext context,
-                        AsyncSnapshot<AudioFile> snapshot) {
-                      if (snapshot.hasData) {
-                        return Column(
-                          children: [
-                            snapshot.data?.artwork ?? Text(''),
-                          ],
-                        );
-                      } else {
-                        return const CircularProgressIndicator();
-                      }
-                    }),
-                // Display play/pause button and volume/speed sliders.
-                ControlButtons(player: _player),
-                // Display seek bar. Using StreamBuilder, this widget rebuilds
-                // each time the position, buffered position or duration changes.
-                StreamBuilder<PositionData>(
-                  stream: _positionDataStream,
-                  builder: (context, snapshot) {
-                    final positionData = snapshot.data;
-                    return SeekBar(
-                      duration: positionData?.duration ?? Duration.zero,
-                      position: positionData?.position ?? Duration.zero,
-                      bufferedPosition:
-                          positionData?.bufferedPosition ?? Duration.zero,
-                      onChangeEnd: _player.seek,
-                    );
-                  },
+              children: <Widget>[
+                Container(
+                  width: 30,
+                  height: 5,
+                  decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius:
+                          const BorderRadius.all(Radius.circular(12.0))),
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-    );
+            const SizedBox(
+              height: 18.0,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const <Widget>[
+                Text(
+                  "Play list",
+                  style: TextStyle(
+                    fontWeight: FontWeight.normal,
+                    fontSize: 24.0,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(
+              height: 36.0,
+            ),
+
+            const SizedBox(
+              height: 24,
+            ),
+          ],
+        ));
   }
 }
 
