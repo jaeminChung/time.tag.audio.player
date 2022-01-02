@@ -1,259 +1,145 @@
 import 'package:flutter/material.dart';
 
+import 'audio_file.dart';
+
 class Id3EditPage extends StatefulWidget {
+  final AudioFile audioFile;
+  const Id3EditPage({Key? key, required this.audioFile}) : super(key: key);
+
   @override
   _Id3EditPageState createState() => _Id3EditPageState();
 }
 
 class _Id3EditPageState extends State<Id3EditPage> {
   final _formKey = GlobalKey<FormState>();
-  var _passKey = GlobalKey<FormFieldState>();
+  final titleController = TextEditingController();
+  final descriptionController = TextEditingController();
+  final genreController = TextEditingController();
+  final albumController = TextEditingController();
+  final artistController = TextEditingController();
 
-  String _name = '';
-  String _email = '';
-  int _age = -1;
-  String _maritalStatus = 'single';
-  int _selectedGender = 0;
-  String _password = '';
-  bool _termsChecked = true;
+  @override
+  void initState() {
+    super.initState();
+    setState(() {
+      titleController.text = widget.audioFile.title;
+      albumController.text = widget.audioFile.album;
+      artistController.text = widget.audioFile.artist;
+      genreController.text = widget.audioFile.genre;
+      descriptionController.text = widget.audioFile.comment;
+    });
+  }
 
-  List<DropdownMenuItem<int>> genderList = [];
+  Future<void> _writeTags(BuildContext context) async {
+    widget.audioFile.writeTags(
+        title: titleController.text,
+        album: albumController.text,
+        artist: artistController.text,
+        genre: genreController.text,
+        comment: descriptionController.text);
 
-  void loadGenderList() {
-    genderList = [];
-    genderList.add(DropdownMenuItem(
-      child: Text('Male'),
-      value: 0,
-    ));
-    genderList.add(DropdownMenuItem(
-      child: Text('Female'),
-      value: 1,
-    ));
-    genderList.add(DropdownMenuItem(
-      child: Text('Others'),
-      value: 2,
-    ));
+    const snackBar = SnackBar(
+      content: Text('Saved!'),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    albumController.dispose();
+    artistController.dispose();
+    genreController.dispose();
+    descriptionController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    loadGenderList();
-    // Build a Form widget using the _formKey we created above
     return Scaffold(
-      appBar:
-          AppBar(title: const Text('Time tag audio player'), actions: <Widget>[
+      appBar: AppBar(title: const Text('Edit Id3 Tag'), actions: <Widget>[
         IconButton(
-          icon: const Icon(Icons.save_alt_outlined),
-          tooltip: 'Edit ID3 Tag',
+          icon: const Icon(Icons.save_alt),
+          tooltip: 'Save ID3 Tag',
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => Id3EditPage(),
-              ),
-            );
+            _writeTags(context);
           },
         )
       ]),
       body: Form(
         key: _formKey,
-        child: Container(
-          padding: const EdgeInsets.all(16),
+        child: Scrollbar(
           child: Align(
             alignment: Alignment.topCenter,
-            child: ListView(
-              children: getFormWidget(),
+            child: Card(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      ...[
+                        TextFormField(
+                          decoration: const InputDecoration(
+                            filled: true,
+                            hintText: 'Enter a title...',
+                            labelText: 'Title',
+                          ),
+                          controller: titleController,
+                        ),
+                        TextFormField(
+                          decoration: const InputDecoration(
+                            filled: true,
+                            hintText: 'Enter a album...',
+                            labelText: 'Album',
+                          ),
+                          controller: albumController,
+                        ),
+                        TextFormField(
+                          decoration: const InputDecoration(
+                            filled: true,
+                            hintText: 'Enter a artist...',
+                            labelText: 'Artist',
+                          ),
+                          controller: artistController,
+                        ),
+                        TextFormField(
+                          decoration: const InputDecoration(
+                            filled: true,
+                            hintText: 'Enter a genre...',
+                            labelText: 'Genre',
+                          ),
+                          controller: genreController,
+                        ),
+                        TextFormField(
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            filled: true,
+                            hintText:
+                                '''Enter a time tag play list...\n00:00 Intro\n01:15 Audio01''',
+                            labelText: 'Description',
+                          ),
+                          controller: descriptionController,
+                          maxLines: 10,
+                        ),
+                      ].expand(
+                        (widget) => [
+                          widget,
+                          const SizedBox(
+                            height: 24,
+                          )
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ),
       ),
     );
-  }
-
-  List<Widget> getFormWidget() {
-    List<Widget> formWidget = [];
-
-    formWidget.add(TextFormField(
-      decoration: InputDecoration(labelText: 'Enter Name', hintText: 'Name'),
-      validator: (value) {
-        if (value!.isEmpty) {
-          return 'Please enter a name';
-        }
-        return null;
-      },
-      onSaved: (value) {
-        setState(() {
-          _name = value ?? '';
-        });
-      },
-    ));
-
-    String? validateEmail(String? value) {
-      if (value!.isEmpty) {
-        return 'Please enter mail';
-      }
-
-      String pattern =
-          r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
-      RegExp regex = RegExp(pattern);
-      if (!regex.hasMatch(value))
-        return 'Enter Valid Email';
-      else
-        return null;
-    }
-
-    formWidget.add(TextFormField(
-      decoration: InputDecoration(labelText: 'Enter Email', hintText: 'Email'),
-      keyboardType: TextInputType.emailAddress,
-      validator: validateEmail,
-      onSaved: (value) {
-        setState(() {
-          _email = value!;
-        });
-      },
-    ));
-
-    formWidget.add(TextFormField(
-      decoration: InputDecoration(hintText: 'Age', labelText: 'Enter Age'),
-      keyboardType: TextInputType.number,
-      validator: (value) {
-        if (value!.isEmpty)
-          return 'Enter age';
-        else
-          return null;
-      },
-      onSaved: (value) {
-        setState(() {
-          _age = int.tryParse(value!)!;
-        });
-      },
-    ));
-
-    formWidget.add(DropdownButton(
-      hint: Text('Select Gender'),
-      items: genderList,
-      value: _selectedGender,
-      onChanged: (value) {
-        setState(() {
-          _selectedGender = (value!) as int;
-        });
-      },
-      isExpanded: true,
-    ));
-
-    formWidget.add(Column(
-      children: <Widget>[
-        RadioListTile<String>(
-          title: const Text('Single'),
-          value: 'single',
-          groupValue: _maritalStatus,
-          onChanged: (value) {
-            setState(() {
-              _maritalStatus = (value!) as String;
-            });
-          },
-        ),
-        RadioListTile<String>(
-          title: const Text('Married'),
-          value: 'married',
-          groupValue: _maritalStatus,
-          onChanged: (value) {
-            setState(() {
-              _maritalStatus = value!;
-            });
-          },
-        ),
-      ],
-    ));
-
-    formWidget.add(
-      TextFormField(
-          key: _passKey,
-          obscureText: true,
-          decoration: InputDecoration(
-              hintText: 'Password', labelText: 'Enter Password'),
-          validator: (value) {
-            if (value!.isEmpty)
-              return 'Please Enter password';
-            else if (value.length < 8)
-              return 'Password should be more than 8 characters';
-            else
-              return null;
-          }),
-    );
-
-    formWidget.add(
-      TextFormField(
-          obscureText: true,
-          decoration: InputDecoration(
-              hintText: 'Confirm Password',
-              labelText: 'Enter Confirm Password'),
-          validator: (confirmPassword) {
-            if (confirmPassword!.isEmpty) return 'Enter confirm password';
-            var password = _passKey.currentState!.value;
-            if (confirmPassword.compareTo(password) != 0)
-              return 'Password mismatch';
-            else
-              return null;
-          },
-          onSaved: (value) {
-            setState(() {
-              _password = value!;
-            });
-          }),
-    );
-
-    formWidget.add(CheckboxListTile(
-      value: _termsChecked,
-      onChanged: (value) {
-        setState(() {
-          _termsChecked = value!;
-        });
-      },
-      subtitle: !_termsChecked
-          ? Text(
-              'Required',
-              style: TextStyle(color: Colors.red, fontSize: 12.0),
-            )
-          : null,
-      title: Text(
-        'I agree to the terms and condition',
-      ),
-      controlAffinity: ListTileControlAffinity.leading,
-    ));
-
-    void onPressedSubmit() {
-      if (_formKey.currentState!.validate() && _termsChecked) {
-        _formKey.currentState!.save();
-
-        print("Name " + _name);
-        print("Email " + _email);
-        print("Age " + _age.toString());
-        switch (_selectedGender) {
-          case 0:
-            print("Gender Male");
-            break;
-          case 1:
-            print("Gender Female");
-            break;
-          case 3:
-            print("Gender Others");
-            break;
-        }
-        print("Marital Status " + _maritalStatus);
-        print("Password " + _password);
-        print("Termschecked " + _termsChecked.toString());
-        Scaffold.of(context)
-            .showSnackBar(SnackBar(content: Text('Form Submitted')));
-      }
-    }
-
-    formWidget.add(RaisedButton(
-        color: Colors.blue,
-        textColor: Colors.white,
-        child: Text('Sign Up'),
-        onPressed: onPressedSubmit));
-
-    return formWidget;
   }
 }

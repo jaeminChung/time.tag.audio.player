@@ -22,14 +22,11 @@ class AudioPlayerPage extends StatefulWidget {
 class _AudioPlayerPageState extends State<AudioPlayerPage>
     with WidgetsBindingObserver {
   late final AudioPlayer _player = AudioPlayer();
-  late final Future<AudioFile> _audioFile;
-
-  final _commentController = TextEditingController();
+  late Future<AudioFile> _audioFileFuture;
+  late AudioFile _audioFile;
 
   final double _initFabHeight = 120.0;
   double _fabHeight = 0;
-  double _panelHeightOpen = 0;
-  double _panelHeightClosed = 95.0;
 
   @override
   void initState() {
@@ -37,12 +34,12 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
     WidgetsBinding.instance?.addObserver(this);
     _init();
 
-    _audioFile = AudioFile.of(widget.audioFile);
+    _audioFileFuture = AudioFile.of(widget.audioFile);
 
     _fabHeight = _initFabHeight;
 
     setState(() {
-      _audioFile.then((value) => _commentController.text = value.comment);
+      _audioFileFuture.then((value) => _audioFile = value);
     });
   }
 
@@ -57,7 +54,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
       debugPrint('A stream error occurred: $e');
     });
     try {
-      _audioFile.then((v) {
+      _audioFileFuture.then((v) {
         var _playList = v.createPlayList();
         _player.setAudioSource(_playList);
       });
@@ -70,7 +67,6 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
   void dispose() {
     WidgetsBinding.instance?.removeObserver(this);
 
-    _commentController.dispose();
     _player.dispose();
     super.dispose();
   }
@@ -95,17 +91,6 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
           (position, bufferedPosition, duration) => PositionData(
               position, bufferedPosition, duration ?? Duration.zero));
 
-  Future<void> _writeTags(BuildContext context) async {
-    _audioFile.then((t) {
-      t.writeTags(comment: _commentController.text);
-    });
-
-    const snackBar = SnackBar(
-      content: Text('Saved!'),
-    );
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-  }
-
   @override
   Widget build(BuildContext context) {
     double _panelHeightClosed = 50.0;
@@ -120,9 +105,13 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => Id3EditPage(),
+                builder: (context) => Id3EditPage(audioFile: _audioFile),
               ),
-            );
+            ).then((value) {
+              _audioFileFuture = AudioFile.of(widget.audioFile);
+              _audioFileFuture.then((value) => _audioFile = value);
+              _init();
+            });
           },
         )
       ]),
@@ -149,7 +138,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           FutureBuilder<AudioFile>(
-              future: _audioFile,
+              future: _audioFileFuture,
               builder:
                   (BuildContext context, AsyncSnapshot<AudioFile> snapshot) {
                 if (snapshot.hasData) {
