@@ -4,7 +4,8 @@ import 'package:time_tag_audio_player/select_folder_page.dart';
 
 Future<void> main() async {
   await JustAudioBackground.init(
-    androidNotificationChannelId: 'com.jiosoft.time_tag_audio_player.channel.audio',
+    androidNotificationChannelId:
+        'com.jiosoft.time_tag_audio_player.channel.audio',
     androidNotificationChannelName: 'Audio playback',
     androidNotificationOngoing: true,
   );
@@ -28,6 +29,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Time tag audio player',
       theme: theme.copyWith(
         colorScheme: theme.colorScheme.copyWith(
@@ -39,5 +41,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-
-

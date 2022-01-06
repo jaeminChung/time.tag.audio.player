@@ -116,7 +116,6 @@ class _SelectFolderPageState extends State<SelectFolderPage> {
       appBar: AppBar(title: const Text('Time tag audio player')),
       body: Builder(
         builder: (context) => ListView.builder(
-//          padding: const EdgeInsets.all(8),
           itemCount: _audioFolders.length,
           itemBuilder: (context, index) {
             return buildFolderCard(context, _audioFolders.elementAt(index));
@@ -184,7 +183,7 @@ class _SelectFolderPageState extends State<SelectFolderPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AudioListPage(folderItem : item),
+              builder: (context) => AudioListPage(folderItem: item),
             ),
           );
         });

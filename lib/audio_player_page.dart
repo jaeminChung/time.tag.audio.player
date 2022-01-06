@@ -174,11 +174,14 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
   }
 
   Widget _panel(ScrollController sc) {
+    double panelHeightOpen = MediaQuery.of(context).size.height * .70;
+    List<IndexedAudioSource>? playList = _player.audioSource?.sequence;
+
     return MediaQuery.removePadding(
         context: context,
         removeTop: true,
-        child: ListView(
-          controller: sc,
+        child: Column(
+          //controller: sc,
           children: <Widget>[
             const SizedBox(
               height: 12.0,
@@ -211,11 +214,27 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
                 ),
               ],
             ),
-            const SizedBox(
-              height: 36.0,
-            ),
-            const SizedBox(
-              height: 24,
+            SizedBox(
+              height: panelHeightOpen,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                controller: sc,
+                itemCount: playList?.length ?? 0,
+                itemBuilder: (context, index) {
+                  MediaItem tag = playList?[index].tag;
+                  return ListTile(
+                      title: Row(
+                        children: <Widget>[
+                          const Icon(Icons.audiotrack, size: 24),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(tag.title),
+                          ),
+                        ],
+                      ),
+                      onTap: () {});
+                },
+              ),
             ),
           ],
         ));
