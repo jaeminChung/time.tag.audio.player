@@ -57,6 +57,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
       _audioFileFuture.then((v) {
         var _playList = v.createPlayList();
         _player.setAudioSource(_playList);
+        _player.play();
       });
     } catch (e) {
       debugPrint('Error loading audio source : $e');
@@ -232,7 +233,10 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
                           ),
                         ],
                       ),
-                      onTap: () {});
+                      onTap: () {
+                        _player.seek(Duration.zero, index: index);
+                        _player.play();
+                      });
                 },
               ),
             ),
