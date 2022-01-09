@@ -28,6 +28,8 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
   final double _initFabHeight = 120.0;
   double _fabHeight = 0;
 
+  int currentIndex = 0;
+
   @override
   void initState() {
     super.initState();
@@ -35,9 +37,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
     _init();
 
     _audioFileFuture = AudioFile.of(widget.audioFile);
-
     _fabHeight = _initFabHeight;
-
     setState(() {
       _audioFileFuture.then((value) => _audioFile = value);
     });
@@ -49,8 +49,11 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration.music());
     // Listen to errors during playback.
-    _player.playbackEventStream.listen((event) {},
-        onError: (Object e, StackTrace stackTrace) {
+    _player.playbackEventStream.listen((event) {
+      setState(() {
+        currentIndex = _player.currentIndex ?? 0;
+      });
+    }, onError: (Object e, StackTrace stackTrace) {
       debugPrint('A stream error occurred: $e');
     });
     try {
@@ -58,6 +61,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
         var _playList = v.createPlayList();
         _player.setAudioSource(_playList);
         _player.play();
+        currentIndex = 0;
       });
     } catch (e) {
       debugPrint('Error loading audio source : $e');
@@ -229,13 +233,22 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
                           const Icon(Icons.audiotrack, size: 24),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: Text(tag.title),
+                            child: Text(
+                              tag.title,
+                              style: currentIndex == index
+                                  ? const TextStyle(color: Colors.black)
+                                  : const TextStyle(color: Colors.grey),
+                            ),
                           ),
                         ],
                       ),
+                      tileColor: Colors.blue,
                       onTap: () {
-                        _player.seek(Duration.zero, index: index);
-                        _player.play();
+                        setState(() {
+                          _player.seek(Duration.zero, index: index);
+                          _player.play();
+                          currentIndex = index;
+                        });
                       });
                 },
               ),
@@ -263,9 +276,9 @@ class ControlButtons extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(metadata.album!,
+                Text(metadata.title,
                     style: Theme.of(context).textTheme.headline6),
-                Text(metadata.title),
+                Text(metadata.album!),
               ],
             );
           }),
@@ -339,7 +352,7 @@ class ControlButtons extends StatelessWidget {
           StreamBuilder<SequenceState?>(
             stream: player.sequenceStateStream,
             builder: (context, snapshot) => IconButton(
-              icon: Icon(Icons.skip_next),
+              icon: const Icon(Icons.skip_next),
               iconSize: 48.0,
               onPressed: player.hasNext ? player.seekToNext : null,
             ),
