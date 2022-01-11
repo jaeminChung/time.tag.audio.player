@@ -147,10 +147,15 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
               builder:
                   (BuildContext context, AsyncSnapshot<AudioFile> snapshot) {
                 if (snapshot.hasData) {
-                  return Column(
-                    children: [
-                      snapshot.data?.artwork ?? const Text(''),
-                    ],
+                  return Container(
+                    height: 400.0,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: snapshot.data!.artworkImageProvider,
+                        fit: BoxFit.fitWidth,
+                      ),
+                      shape: BoxShape.rectangle,
+                    ),
                   );
                 } else {
                   return const CircularProgressIndicator();
@@ -236,7 +241,9 @@ class _AudioPlayerPageState extends State<AudioPlayerPage>
                             child: Text(
                               tag.title,
                               style: currentIndex == index
-                                  ? const TextStyle(color: Colors.black)
+                                  ? const TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold)
                                   : const TextStyle(color: Colors.grey),
                             ),
                           ),
@@ -304,7 +311,7 @@ class ControlButtons extends StatelessWidget {
           StreamBuilder<SequenceState?>(
             stream: player.sequenceStateStream,
             builder: (context, snapshot) => IconButton(
-              icon: Icon(Icons.skip_previous),
+              icon: const Icon(Icons.skip_previous),
               iconSize: 48.0,
               onPressed: player.hasPrevious ? player.seekToPrevious : null,
             ),
